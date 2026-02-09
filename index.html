@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ระบบคลังโครงงาน (v5 - Student ID Added)</title>
+<title>ระบบคลังโครงงาน (v5.1 - Advisor Search Enabled)</title>
 <style>
 body{ margin:0; font-family: 'Prompt', sans-serif; background:#f0f2f5; color: #333; }
 .page{ display:none; padding:20px; box-sizing: border-box; }
@@ -13,10 +13,9 @@ input, select { width:100%; padding:12px; margin:8px 0; border-radius:10px; bord
 button { width:100%; padding:12px; margin-top:10px; border:none; border-radius:10px; font-size:17px; background:linear-gradient(135deg,#2575fc,#6a11cb); color:white; cursor:pointer; transition: 0.3s; }
 button:hover { opacity: 0.9; transform: translateY(-1px); }
 
-/* ปรับปรุงส่วน Input ผู้จัดทำ */
 .author-row { display: flex; gap: 10px; margin-bottom: 5px; }
-.author-row input:first-child { flex: 2; } /* ชื่อยาวกว่า */
-.author-row input:last-child { flex: 1; }  /* เลขประจำตัวสั้นกว่า */
+.author-row input:first-child { flex: 2; } 
+.author-row input:last-child { flex: 1; }  
 
 .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
 .project-box { position:relative; border:1px solid #eee; border-radius:12px; padding:20px; background:#fff; transition: 0.3s; }
@@ -33,6 +32,9 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 .search-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .search-row input { flex: 2; min-width: 200px; }
 .search-row select { flex: 1; min-width: 150px; }
+
+/* เพิ่มสไตล์สำหรับที่ปรึกษา */
+.advisor-info { font-size: 13px; color: #00b894; margin-top: 8px; border-top: 1px dashed #eee; pt-2; }
 </style>
 </head>
 <body>
@@ -115,7 +117,9 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
             <button onclick="show('page-choice')" style="width: auto; padding: 8px 20px;">หน้าหลัก</button>
         </div>
         <div class="search-container">
-            <div class="search-row"><input id="searchInp" placeholder="ค้นหาชื่อ, ผู้จัดทำ หรือเลขประจำตัว..." oninput="filterProjects()"></div>
+            <div class="search-row">
+                <input id="searchInp" placeholder="ค้นหาชื่อโครงงาน, ผู้จัดทำ หรือชื่อครูที่ปรึกษา..." oninput="filterProjects()">
+            </div>
             <div class="search-row">
                 <select id="searchCat" onchange="filterProjects()"><option value="">ทุก Theme</option></select>
                 <select id="searchSub" onchange="filterProjects()"><option value="">ทุกวิชา</option></select>
@@ -130,6 +134,7 @@ let currentUser = "";
 const THEMES = ["1. การเกษตรและการแปรรูป","2. การท่องเที่ยวคุณภาพ","3. ยานยนต์ไฟฟ้า","4. การแพทย์และสุขภาพ","5. โลจิสติกส์","6. อุปกรณ์อิเล็กทรอนิกส์อัจฉริยะ","7. SME คุณภาพสูง","8. พื้นที่และเมืองอัจฉริยะ","9. ความยากจนและการคุ้มครองทางสังคม","10. เศรษฐกิจหมุนเวียน","11. การเปลี่ยนแปลงสภาพภูมิอากาศ","12. กำลังคนสมรรถนะสูง","13. ภาครัฐที่ทันสมัย"];
 const SUBJECTS = ["ฟิสิกส์","เคมี","ชีววิทยาและวิทยาศาสตร์สุขภาพ","คณิตศาสตร์และวิทยาการคำนวณ","ภาษาต่างประเทศ","ศิลปศาสตร์"];
 
+// --- ฟังก์ชันหลักเหมือนเดิม ---
 function initSelects() {
     const cat = document.getElementById("cat");
     const sub = document.getElementById("subject");
@@ -178,7 +183,6 @@ function saveData() {
 
 function finalizeSave(fileData, fileName, editId) {
     let all = JSON.parse(localStorage.getItem("all_projects_db")) || [];
-    
     const data = {
         id: editId ? parseInt(editId) : Date.now(),
         owner: currentUser,
@@ -196,14 +200,12 @@ function finalizeSave(fileData, fileName, editId) {
         file: fileData,
         fileName: fileName
     };
-
     if(editId) {
         const index = all.findIndex(x => x.id == editId);
         all[index] = data;
     } else {
         all.push(data);
     }
-
     localStorage.setItem("all_projects_db", JSON.stringify(all));
     alert(editId ? "แก้ไขข้อมูลเรียบร้อย!" : "บันทึกเรียบร้อย!");
     enterCreator();
@@ -219,7 +221,6 @@ function editProj(id) {
     const all = JSON.parse(localStorage.getItem("all_projects_db")) || [];
     const p = all.find(x => x.id === id);
     if(!p) return;
-
     show('page-form');
     document.getElementById("formTitle").innerText = "แก้ไขข้อมูลโครงงาน";
     document.getElementById("editId").value = p.id;
@@ -245,6 +246,7 @@ function enterViewer() {
     filterProjects();
 }
 
+// --- ส่วนที่ปรับปรุง: การค้นหาจากครูที่ปรึกษา ---
 function filterProjects() {
     const kw = document.getElementById("searchInp").value.toLowerCase();
     const cat = document.getElementById("searchCat").value;
@@ -252,7 +254,16 @@ function filterProjects() {
     const all = JSON.parse(localStorage.getItem("all_projects_db")) || [];
     
     const filtered = all.filter(p => {
-        const matchText = (p.pth + (p.s1||"") + (p.id1||"") + (p.s2||"") + (p.id2||"") + (p.s3||"") + (p.id3||"")).toLowerCase().includes(kw);
+        // รวมชื่อครูที่ปรึกษา (p.t1) เข้าไปในกองข้อความที่จะใช้ค้นหา
+        const targetString = (
+            p.pth + (p.pen||"") + 
+            (p.s1||"") + (p.id1||"") + 
+            (p.s2||"") + (p.id2||"") + 
+            (p.s3||"") + (p.id3||"") + 
+            (p.t1||"") // เพิ่มส่วนนี้
+        ).toLowerCase();
+
+        const matchText = targetString.includes(kw);
         const matchCat = !cat || p.cat === cat;
         const matchSub = !sub || p.sub === sub;
         return matchText && matchCat && matchSub;
@@ -261,7 +272,6 @@ function filterProjects() {
 }
 
 function createCard(p, isOwner) {
-    // จัดรูปแบบการแสดงผลชื่อ + เลขประจำตัว
     let authors = [];
     if(p.s1) authors.push(`${p.s1} (${p.id1 || '-'})`);
     if(p.s2) authors.push(`${p.s2} (${p.id2 || '-'})`);
@@ -279,6 +289,9 @@ function createCard(p, isOwner) {
             <div class="tag">${p.cat || 'ไม่มี Theme'}</div>
             <div class="tag tag-subject">${p.sub || 'ไม่มีหมวดวิชา'}</div>
             <div class="sub-title" style="color:#666;">โดย: <br>${authors.join('<br>')}</div>
+            
+            <div class="advisor-info">ที่ปรึกษา: ${p.t1 || 'ไม่ระบุ'}</div>
+
             ${p.file ? `<button onclick="handleDownload(${p.id})" style="background:#0984e3; margin-top:15px;"> ดาวน์โหลดไฟล์</button>` : '<p style="font-size:12px;color:#999;margin-top:10px;">ไม่มีไฟล์แนบ</p>'}
         </div>
     `;
