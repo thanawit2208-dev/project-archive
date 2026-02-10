@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ระบบคลังโครงงาน (v5.1 - Advisor Search Enabled)</title>
+<title>ระบบคลังโครงงาน (MWIT Project Online)</title>
 <style>
+/* CSS คงเดิมเพื่อความเสถียรของ UI */
 body{ margin:0; font-family: 'Prompt', sans-serif; background:#f0f2f5; color: #333; }
 .page{ display:none; padding:20px; box-sizing: border-box; }
 .center-box{ width:350px; background:white; padding:25px; margin:80px auto; border-radius:15px; box-shadow:0 8px 25px rgba(0,0,0,.2); text-align:center; }
@@ -12,11 +13,9 @@ body{ margin:0; font-family: 'Prompt', sans-serif; background:#f0f2f5; color: #3
 input, select { width:100%; padding:12px; margin:8px 0; border-radius:10px; border:1px solid #ddd; box-sizing: border-box; font-size: 16px; }
 button { width:100%; padding:12px; margin-top:10px; border:none; border-radius:10px; font-size:17px; background:linear-gradient(135deg,#2575fc,#6a11cb); color:white; cursor:pointer; transition: 0.3s; }
 button:hover { opacity: 0.9; transform: translateY(-1px); }
-
 .author-row { display: flex; gap: 10px; margin-bottom: 5px; }
-.author-row input:first-child { flex: 2; } 
-.author-row input:last-child { flex: 1; }  
-
+.author-row input:first-child { flex: 2; }
+.author-row input:last-child { flex: 1; }
 .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
 .project-box { position:relative; border:1px solid #eee; border-radius:12px; padding:20px; background:#fff; transition: 0.3s; }
 .project-box:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
@@ -28,20 +27,16 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 .delete-btn { background:#ff4d4f; }
 .edit-btn { background:#f39c12; }
 .sub-title { font-weight:bold; margin-top:12px; margin-bottom:5px; font-size: 14px; color: #555; }
-.search-container { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-.search-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-.search-row input { flex: 2; min-width: 200px; }
-.search-row select { flex: 1; min-width: 150px; }
-
-/* เพิ่มสไตล์สำหรับที่ปรึกษา */
-.advisor-info { font-size: 13px; color: #00b894; margin-top: 8px; border-top: 1px dashed #eee; pt-2; }
+#loader { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; justify-content:center; align-items:center; font-size:20px; font-weight:bold; color:#6a11cb; }
 </style>
 </head>
 <body>
 
+<div id="loader">🚀 กำลังโหลดข้อมูลระบบออนไลน์...</div>
+
 <div id="page-login" class="page" style="display:block;">
     <div class="center-box">
-        <h2>เข้าสู่ระบบ</h2>
+        <h2>MWIT Project Sync</h2>
         <input id="loginUser" placeholder="ชื่อผู้ใช้">
         <input id="loginPass" type="password" placeholder="รหัสผ่าน">
         <button onclick="login()">เข้าสู่ระบบ</button>
@@ -59,42 +54,23 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
 
 <div id="page-form" class="page">
     <div class="form-box">
-        <h2 id="formTitle" style="text-align:center;">บันทึกข้อมูลโครงงาน</h2>
-        <input type="hidden" id="editId">
-        
+        <h2 id="formTitle">บันทึกข้อมูลโครงงาน</h2>
+        <input type="hidden" id="editFirebaseKey">
         <div class="sub-title">ชื่อโครงงาน</div>
         <input id="pth" placeholder="ชื่อภาษาไทย *">
         <input id="pen" placeholder="ชื่อภาษาอังกฤษ">
-        
-        <div class="sub-title">ผู้จัดทำ (ชื่อ-นามสกุล และ เลขประจำตัว)</div>
-        <div class="author-row">
-            <input id="f1" placeholder="ชื่อคนที่ 1 *">
-            <input id="id1" placeholder="เลขประจำตัว *">
-        </div>
-        <div class="author-row">
-            <input id="f2" placeholder="ชื่อคนที่ 2">
-            <input id="id2" placeholder="เลขประจำตัว">
-        </div>
-        <div class="author-row">
-            <input id="f3" placeholder="ชื่อคนที่ 3">
-            <input id="id3" placeholder="เลขประจำตัว">
-        </div>
-        
+        <div class="sub-title">ผู้จัดทำ</div>
+        <div class="author-row"><input id="f1" placeholder="ชื่อคนที่ 1 *"><input id="id1" placeholder="เลขประจำตัว *"></div>
+        <div class="author-row"><input id="f2" placeholder="ชื่อคนที่ 2"><input id="id2" placeholder="เลขประจำตัว"></div>
+        <div class="author-row"><input id="f3" placeholder="ชื่อคนที่ 3"><input id="id3" placeholder="เลขประจำตัว"></div>
         <div class="sub-title">ครูที่ปรึกษา</div>
         <input id="t1" placeholder="ชื่อครูที่ปรึกษา">
-        
         <div class="sub-title">หมวดหมู่</div>
-        <select id="cat">
-            <option value="">-- เลือก Theme --</option>
-        </select>
-        <select id="subject">
-            <option value="">-- เลือกหมวดหมู่วิชา --</option>
-        </select>
-        
-        <div class="sub-title">ไฟล์รูปเล่ม (หากแก้ไขและไม่เลือกใหม่ จะใช้ไฟล์เดิม)</div>
+        <select id="cat"><option value="">-- เลือก Theme --</option></select>
+        <select id="subject"><option value="">-- เลือกหมวดหมู่วิชา --</option></select>
+        <div class="sub-title">ไฟล์รูปเล่ม (PDF/รูปภาพ)</div>
         <input type="file" id="projectFile">
-        
-        <button id="btnSave" onclick="saveData()"> บันทึกข้อมูล</button>
+        <button onclick="saveData()"> บันทึกขึ้นระบบ Cloud</button>
         <button style="background:#888" onclick="enterCreator()">ยกเลิก</button>
     </div>
 </div>
@@ -117,29 +93,29 @@ button:hover { opacity: 0.9; transform: translateY(-1px); }
             <button onclick="show('page-choice')" style="width: auto; padding: 8px 20px;">หน้าหลัก</button>
         </div>
         <div class="search-container">
-            <div class="search-row">
-                <input id="searchInp" placeholder="ค้นหาชื่อโครงงาน, ผู้จัดทำ หรือชื่อครูที่ปรึกษา..." oninput="filterProjects()">
-            </div>
-            <div class="search-row">
-                <select id="searchCat" onchange="filterProjects()"><option value="">ทุก Theme</option></select>
-                <select id="searchSub" onchange="filterProjects()"><option value="">ทุกวิชา</option></select>
-            </div>
+            <input id="searchInp" placeholder="ค้นหาชื่อ หรือเลขประจำตัว..." oninput="filterProjects()" style="margin-bottom:10px;">
         </div>
         <div id="all-projects-grid" class="project-grid"></div>
     </div>
 </div>
 
 <script>
+// --- เชื่อมต่อ Database ของคุณ ---
+const DB_URL = "https://mwitproject-51c57-default-rtdb.asia-southeast1.firebasedatabase.app/projects";
+
 let currentUser = "";
 const THEMES = ["1. การเกษตรและการแปรรูป","2. การท่องเที่ยวคุณภาพ","3. ยานยนต์ไฟฟ้า","4. การแพทย์และสุขภาพ","5. โลจิสติกส์","6. อุปกรณ์อิเล็กทรอนิกส์อัจฉริยะ","7. SME คุณภาพสูง","8. พื้นที่และเมืองอัจฉริยะ","9. ความยากจนและการคุ้มครองทางสังคม","10. เศรษฐกิจหมุนเวียน","11. การเปลี่ยนแปลงสภาพภูมิอากาศ","12. กำลังคนสมรรถนะสูง","13. ภาครัฐที่ทันสมัย"];
 const SUBJECTS = ["ฟิสิกส์","เคมี","ชีววิทยาและวิทยาศาสตร์สุขภาพ","คณิตศาสตร์และวิทยาการคำนวณ","ภาษาต่างประเทศ","ศิลปศาสตร์"];
 
-// --- ฟังก์ชันหลักเหมือนเดิม ---
-function initSelects() {
-    const cat = document.getElementById("cat");
-    const sub = document.getElementById("subject");
-    if(cat.options.length <= 1) THEMES.forEach(t => cat.add(new Option(t, t)));
-    if(sub.options.length <= 1) SUBJECTS.forEach(s => sub.add(new Option(s, s)));
+function toggleLoader(show) { document.getElementById('loader').style.display = show ? 'flex' : 'none'; }
+
+async function fetchAll() {
+    try {
+        const res = await fetch(`${DB_URL}.json`);
+        const data = await res.json();
+        if(!data) return [];
+        return Object.keys(data).map(key => ({ ...data[key], fbKey: key }));
+    } catch (e) { return []; }
 }
 
 function show(id) {
@@ -148,180 +124,153 @@ function show(id) {
     if(id === 'page-form') initSelects();
 }
 
+function initSelects() {
+    const cat = document.getElementById("cat");
+    const sub = document.getElementById("subject");
+    if(cat.options.length <= 1) THEMES.forEach(t => cat.add(new Option(t, t)));
+    if(sub.options.length <= 1) SUBJECTS.forEach(s => sub.add(new Option(s, s)));
+}
+
 function login() {
     const u = document.getElementById("loginUser").value.trim();
     if(u) { currentUser = u; localStorage.setItem("lastUser", u); show('page-choice'); document.getElementById("welcomeText").innerText = "สวัสดีคุณ " + u; }
 }
 
 function logout() { localStorage.removeItem("lastUser"); location.reload(); }
-function enterCreator() { renderMyProjects(); show('page-result'); }
-function addProject() { resetForm(); document.getElementById("formTitle").innerText = "เพิ่มโครงงานใหม่"; show('page-form'); }
 
-function saveData() {
+async function enterCreator() { 
+    toggleLoader(true); 
+    await renderMyProjects(); 
+    toggleLoader(false); 
+    show('page-result'); 
+}
+
+async function enterViewer() { 
+    toggleLoader(true); 
+    show('page-viewer');
+    await filterProjects();
+    toggleLoader(false);
+}
+
+function addProject() { resetForm(); show('page-form'); }
+
+async function saveData() {
     const pth = document.getElementById("pth").value;
     const f1 = document.getElementById("f1").value;
     const id1 = document.getElementById("id1").value;
-    const editId = document.getElementById("editId").value;
+    const fbKey = document.getElementById("editFirebaseKey").value;
     const fileInp = document.getElementById("projectFile");
 
-    if(!pth || !f1 || !id1) return alert("กรุณากรอกชื่อโครงงาน ชื่อผู้จัดทำ และเลขประจำตัวคนที่ 1");
+    if(!pth || !f1 || !id1) return alert("กรุณากรอกข้อมูลดาวจันให้ครบ");
 
+    toggleLoader(true);
     if(fileInp.files[0]) {
         const reader = new FileReader();
-        reader.onload = (e) => { finalizeSave(e.target.result, fileInp.files[0].name, editId); };
+        reader.onload = async (e) => { await finalizeSave(e.target.result, fileInp.files[0].name, fbKey); };
         reader.readAsDataURL(fileInp.files[0]);
     } else {
-        let oldFile = null, oldFileName = null;
-        if(editId) {
-            let all = JSON.parse(localStorage.getItem("all_projects_db")) || [];
-            let oldData = all.find(x => x.id == editId);
-            if(oldData) { oldFile = oldData.file; oldFileName = oldData.fileName; }
+        let oldFileData = null, oldFileName = null;
+        if(fbKey) {
+            const all = await fetchAll();
+            const old = all.find(x => x.fbKey === fbKey);
+            if(old) { oldFileData = old.file; oldFileName = old.fileName; }
         }
-        finalizeSave(oldFile, oldFileName, editId);
+        await finalizeSave(oldFileData, oldFileName, fbKey);
     }
 }
 
-function finalizeSave(fileData, fileName, editId) {
-    let all = JSON.parse(localStorage.getItem("all_projects_db")) || [];
+async function finalizeSave(fileData, fileName, fbKey) {
     const data = {
-        id: editId ? parseInt(editId) : Date.now(),
         owner: currentUser,
         pth: document.getElementById("pth").value,
         pen: document.getElementById("pen").value,
         cat: document.getElementById("cat").value,
         sub: document.getElementById("subject").value,
-        s1: document.getElementById("f1").value,
-        id1: document.getElementById("id1").value,
-        s2: document.getElementById("f2").value,
-        id2: document.getElementById("id2").value,
-        s3: document.getElementById("f3").value,
-        id3: document.getElementById("id3").value,
+        s1: document.getElementById("f1").value, id1: document.getElementById("id1").value,
+        s2: document.getElementById("f2").value, id2: document.getElementById("id2").value,
+        s3: document.getElementById("f3").value, id3: document.getElementById("id3").value,
         t1: document.getElementById("t1").value,
-        file: fileData,
-        fileName: fileName
+        file: fileData, fileName: fileName,
+        updatedAt: Date.now()
     };
-    if(editId) {
-        const index = all.findIndex(x => x.id == editId);
-        all[index] = data;
-    } else {
-        all.push(data);
-    }
-    localStorage.setItem("all_projects_db", JSON.stringify(all));
-    alert(editId ? "แก้ไขข้อมูลเรียบร้อย!" : "บันทึกเรียบร้อย!");
-    enterCreator();
+
+    const url = fbKey ? `${DB_URL}/${fbKey}.json` : `${DB_URL}.json`;
+    const method = fbKey ? 'PUT' : 'POST';
+
+    try {
+        await fetch(url, { method, body: JSON.stringify(data) });
+        alert("บันทึกข้อมูลเรียบร้อย!");
+        await enterCreator();
+    } catch (e) { alert("Error: " + e.message); }
+    toggleLoader(false);
 }
 
-function renderMyProjects() {
-    const all = JSON.parse(localStorage.getItem("all_projects_db")) || [];
+async function renderMyProjects() {
+    const all = await fetchAll();
     const my = all.filter(p => p.owner === currentUser);
     document.getElementById("my-projects").innerHTML = my.map(p => createCard(p, true)).join('');
 }
 
-function editProj(id) {
-    const all = JSON.parse(localStorage.getItem("all_projects_db")) || [];
-    const p = all.find(x => x.id === id);
-    if(!p) return;
-    show('page-form');
-    document.getElementById("formTitle").innerText = "แก้ไขข้อมูลโครงงาน";
-    document.getElementById("editId").value = p.id;
-    document.getElementById("pth").value = p.pth;
-    document.getElementById("pen").value = p.pen || "";
-    document.getElementById("f1").value = p.s1 || "";
-    document.getElementById("id1").value = p.id1 || "";
-    document.getElementById("f2").value = p.s2 || "";
-    document.getElementById("id2").value = p.id2 || "";
-    document.getElementById("f3").value = p.s3 || "";
-    document.getElementById("id3").value = p.id3 || "";
-    document.getElementById("t1").value = p.t1 || "";
-    document.getElementById("cat").value = p.cat || "";
-    document.getElementById("subject").value = p.sub || "";
-}
-
-function enterViewer() {
-    show('page-viewer');
-    const cSel = document.getElementById("searchCat");
-    const sSel = document.getElementById("searchSub");
-    if(cSel.options.length <= 1) THEMES.forEach(t => cSel.add(new Option(t, t)));
-    if(sSel.options.length <= 1) SUBJECTS.forEach(s => sSel.add(new Option(s, s)));
-    filterProjects();
-}
-
-// --- ส่วนที่ปรับปรุง: การค้นหาจากครูที่ปรึกษา ---
-function filterProjects() {
+async function filterProjects() {
     const kw = document.getElementById("searchInp").value.toLowerCase();
-    const cat = document.getElementById("searchCat").value;
-    const sub = document.getElementById("searchSub").value;
-    const all = JSON.parse(localStorage.getItem("all_projects_db")) || [];
-    
-    const filtered = all.filter(p => {
-        // รวมชื่อครูที่ปรึกษา (p.t1) เข้าไปในกองข้อความที่จะใช้ค้นหา
-        const targetString = (
-            p.pth + (p.pen||"") + 
-            (p.s1||"") + (p.id1||"") + 
-            (p.s2||"") + (p.id2||"") + 
-            (p.s3||"") + (p.id3||"") + 
-            (p.t1||"") // เพิ่มส่วนนี้
-        ).toLowerCase();
-
-        const matchText = targetString.includes(kw);
-        const matchCat = !cat || p.cat === cat;
-        const matchSub = !sub || p.sub === sub;
-        return matchText && matchCat && matchSub;
-    });
+    const all = await fetchAll();
+    const filtered = all.filter(p => (p.pth + p.id1 + (p.s1||"")).toLowerCase().includes(kw));
     document.getElementById("all-projects-grid").innerHTML = filtered.map(p => createCard(p, false)).join('');
 }
 
 function createCard(p, isOwner) {
-    let authors = [];
-    if(p.s1) authors.push(`${p.s1} (${p.id1 || '-'})`);
-    if(p.s2) authors.push(`${p.s2} (${p.id2 || '-'})`);
-    if(p.s3) authors.push(`${p.s3} (${p.id3 || '-'})`);
-
+    let auths = [`${p.s1} (${p.id1})`];
+    if(p.s2) auths.push(`${p.s2} (${p.id2})`);
+    if(p.s3) auths.push(`${p.s3} (${p.id3})`);
+    
     return `
         <div class="project-box">
-            ${isOwner ? `
-                <div class="action-btns">
-                    <button class="mini-btn edit-btn" onclick="editProj(${p.id})">✎</button>
-                    <button class="mini-btn delete-btn" onclick="deleteProj(${p.id})">✕</button>
-                </div>
-            ` : ''}
+            ${isOwner ? `<div class="action-btns">
+                <button class="mini-btn edit-btn" onclick="editProj('${p.fbKey}')">✎</button>
+                <button class="mini-btn delete-btn" onclick="deleteProj('${p.fbKey}')">✕</button>
+            </div>` : ''}
             <div class="project-title">${p.pth}</div>
-            <div class="tag">${p.cat || 'ไม่มี Theme'}</div>
-            <div class="tag tag-subject">${p.sub || 'ไม่มีหมวดวิชา'}</div>
-            <div class="sub-title" style="color:#666;">โดย: <br>${authors.join('<br>')}</div>
-            
-            <div class="advisor-info">ที่ปรึกษา: ${p.t1 || 'ไม่ระบุ'}</div>
-
-            ${p.file ? `<button onclick="handleDownload(${p.id})" style="background:#0984e3; margin-top:15px;"> ดาวน์โหลดไฟล์</button>` : '<p style="font-size:12px;color:#999;margin-top:10px;">ไม่มีไฟล์แนบ</p>'}
-        </div>
-    `;
+            <div class="tag">${p.cat || 'ทั่วไป'}</div>
+            <div class="sub-title" style="font-size:12px; color:#777;">โดย: ${auths.join(', ')}</div>
+            ${p.file ? `<button onclick="downloadFile('${p.fbKey}')" style="background:#0984e3; margin-top:10px; font-size:13px;">📥 ดาวน์โหลดไฟล์</button>` : ''}
+        </div>`;
 }
 
-function handleDownload(id) {
-    const all = JSON.parse(localStorage.getItem("all_projects_db")) || [];
-    const p = all.find(x => x.id === id);
-    if (!p || !p.file) return alert("ไม่พบข้อมูลไฟล์");
-    const link = document.createElement('a');
-    link.href = p.file;
-    link.download = p.fileName || "โครงงาน.pdf";
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(() => document.body.removeChild(link), 100);
+async function editProj(fbKey) {
+    const all = await fetchAll();
+    const p = all.find(x => x.fbKey === fbKey);
+    if(!p) return;
+    show('page-form');
+    document.getElementById("editFirebaseKey").value = fbKey;
+    document.getElementById("pth").value = p.pth;
+    document.getElementById("f1").value = p.s1; document.getElementById("id1").value = p.id1;
+    document.getElementById("f2").value = p.s2 || ""; document.getElementById("id2").value = p.id2 || "";
+    document.getElementById("f3").value = p.s3 || ""; document.getElementById("id3").value = p.id3 || "";
 }
 
-function deleteProj(id) {
-    if(confirm("ยืนยันการลบโครงงานนี้?")) {
-        let all = JSON.parse(localStorage.getItem("all_projects_db")) || [];
-        localStorage.setItem("all_projects_db", JSON.stringify(all.filter(x => x.id !== id)));
-        renderMyProjects();
+async function deleteProj(fbKey) {
+    if(confirm("ต้องการลบโครงงานนี้ออกจากระบบออนไลน์หรือไม่?")) {
+        toggleLoader(true);
+        await fetch(`${DB_URL}/${fbKey}.json`, { method: 'DELETE' });
+        await renderMyProjects();
+        toggleLoader(false);
+    }
+}
+
+async function downloadFile(fbKey) {
+    const all = await fetchAll();
+    const p = all.find(x => x.fbKey === fbKey);
+    if(p && p.file) {
+        const link = document.createElement('a');
+        link.href = p.file;
+        link.download = p.fileName || "project_file";
+        link.click();
     }
 }
 
 function resetForm() {
-    document.getElementById("editId").value = "";
+    document.getElementById("editFirebaseKey").value = "";
     document.querySelectorAll('#page-form input').forEach(i => i.value='');
-    document.getElementById("cat").value = "";
-    document.getElementById("subject").value = "";
 }
 
 window.onload = () => {
